@@ -9,11 +9,11 @@ from sklearn import preprocessing
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 
-# ------------------ Load Data ------------------
+
 training = pd.read_csv('Data/Training.csv')
 testing = pd.read_csv('Data/Testing.csv')
 
-# Clean duplicate columns
+
 training.columns = training.columns.str.replace(r"\.\d+$", "", regex=True)
 testing.columns = testing.columns.str.replace(r"\.\d+$", "", regex=True)
 training = training.loc[:, ~training.columns.duplicated()]
@@ -23,20 +23,19 @@ cols = training.columns[:-1]
 x = training[cols]
 y = training['prognosis']
 
-# Label encode diseases
+
 le = preprocessing.LabelEncoder()
 y = le.fit_transform(y)
 
-# Train-test split
+
 x_train, x_test, y_train, y_test = train_test_split(
     x, y, test_size=0.33, random_state=42
 )
 
-# Train model
+
 model = RandomForestClassifier(n_estimators=300, random_state=42)
 model.fit(x_train, y_train)
 
-# ------------------ Dictionaries ------------------
 severityDictionary = {}
 description_list = {}
 precautionDictionary = {}
@@ -60,7 +59,7 @@ def getprecautionDict():
         for row in csv.reader(csv_file):
             precautionDictionary[row[0]] = [row[1], row[2], row[3], row[4]]
 
-# ------------------ Symptom Extractor ------------------
+
 symptom_synonyms = {
     "stomach ache": "stomach_pain",
     "belly pain": "stomach_pain",
@@ -82,17 +81,17 @@ def extract_symptoms(user_input, all_symptoms):
     extracted = []
     text = user_input.lower().replace("-", " ")
 
-    # 1. Synonym matching
+   
     for phrase, mapped in symptom_synonyms.items():
         if phrase in text:
             extracted.append(mapped)
 
-    # 2. Direct match
+    
     for symptom in all_symptoms:
         if symptom.replace("_", " ") in text:
             extracted.append(symptom)
 
-    # 3. Fuzzy matching
+   
     words = re.findall(r"\w+", text)
     for word in words:
         close = get_close_matches(
@@ -105,7 +104,7 @@ def extract_symptoms(user_input, all_symptoms):
 
     return list(set(extracted))
 
-# ------------------ Prediction ------------------
+
 def predict_disease(symptoms_list):
     input_vector = np.zeros(len(symptoms_dict))
 
@@ -121,18 +120,17 @@ def predict_disease(symptoms_list):
 
     return disease, confidence, pred_proba
 
-# ------------------ Streamlit UI ------------------
+
 st.set_page_config(page_title="AI Health ChatBot", page_icon="🩺", layout="centered")
 
 st.title("🩺 AI Health Diagnosis ChatBot")
 st.write("Fill in the details below and describe your symptoms clearly.")
 
-# Load metadata dictionaries
+
 getSeverityDict()
 getDescription()
 getprecautionDict()
 
-# --------- User Inputs ---------
 st.subheader("👤 Personal Information")
 
 name = st.text_input("Full Name:", placeholder="Enter your full name")
@@ -172,7 +170,7 @@ family = st.text_input(
     placeholder="Example: yes, my parents had similar illness"
 )
 
-# ------------ Predict Button ------------
+
 if st.button("🔍 Analyze & Predict"):
     if not name or not symptoms_input.strip():
         st.error("Please enter your name and describe your symptoms.")
